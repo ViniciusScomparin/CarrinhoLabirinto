@@ -110,15 +110,15 @@ uint8_t ler_IR()
   delayMicroseconds(10);
   digitalWrite(trigEsquerda, LOW);
   duracaoEsquerda = pulseIn(echoEsquerda, HIGH);
-  distanciaEsquerda = duracao / 58; // converte sensor para CM
+  distanciaEsquerda = duracaoEsquerda / 58; // converte sensor para CM
 
   digitalWrite(trigDireita, LOW);
   delayMicroseconds(2);
   digitalWrite(trigDireita, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigDireita, LOW);
-  duracaoDireita = pulseIn(echo, HIGH);
-  distanciaDireita = duracao / 58; // converte sensor para CM
+  duracaoDireita = pulseIn(echoDireita, HIGH);
+  distanciaDireita = duracaoDireita / 58; // converte sensor para CM
 
   if (distanciaEsquerda > 20 && distanciaDireita > 20) // sem nenhuma parede dos lados > Fim do lbirinto
   { 
