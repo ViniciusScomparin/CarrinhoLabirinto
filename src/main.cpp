@@ -1,141 +1,136 @@
-enum Estado_enum
-{
-  PARA,
-  FRENTE,
-  ROTACAO_DIREITA,
-  ROTACAO_ESQUERDA
-};
-enum Sensores_enum
-{
-  NENHUM,
-  SENSOR_DIREITO,
-  SENSOR_ESQUERDO,
-  AMBOS
-};
+#include <Arduino.h>
 
-int trigEsquerda = 7;
-int echoEsquerda = 10;
-// int trigcen = 5;
-// int echocen = 6;
-int trigDireita = 2;
-int echoDireita = 4;
-int distEsquerda, distDireita; /*distcen, */
+int cm = 0;
+int cm1 = 0;
+float leituraD;
+float leituraE;
+int sinalD = 4;
+int sinalE = 7;
+
+#define EN1 12
+#define EN2 13
+#define EN3 11
+#define EN4 10
+
+void readUltrasonicDistanceD()
+{
+  pinMode(sinalD, OUTPUT);
+  digitalWrite(sinalD, LOW);
+  delayMicroseconds(2);
+  digitalWrite(sinalD, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(sinalD, LOW);
+  pinMode(sinalD, INPUT);
+
+  leituraD = pulseIn(sinalD, HIGH);
+}
+
+void readUltrasonicDistanceE()
+{
+  pinMode(sinalE, OUTPUT);
+  digitalWrite(sinalE, LOW);
+  delayMicroseconds(2);
+  digitalWrite(sinalE, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(sinalE, LOW);
+  pinMode(sinalE, INPUT);
+
+  leituraE = pulseIn(sinalE, HIGH);
+}
 
 void setup()
 {
-
-  pinMode(trigEsquerda, OUTPUT);
-  // pinMode(trigcen, OUTPUT);
-  pinMode(trigDireita, OUTPUT);
-  pinMode(echoEsquerda, INPUT);
-  // pinMode(echocen, INPUT);
-  pinMode(echoDireita, INPUT);
-  //pinMode(0, OUTPUT);
-  //pinMode(1, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(11, OUTPUT);
-}
-
-void motores_para()
-{
-  digitalWrite(11, LOW);
-  digitalWrite(5, LOW);
-}
-
-void motores_frente()
-{
-  digitalWrite(11, HIGH);
-  digitalWrite(5, HIGH);
-  delay(2000);
-}
-
-void motores_direito()
-{
-  digitalWrite(11, LOW);
-  digitalWrite(5, HIGH);
-  delay(1000);
-}
-
-void motores_esquerdo()
-{
-  digitalWrite(11, HIGH);
-  digitalWrite(5, LOW);
-  delay(1000);
+  Serial.begin(9600);
+  pinMode(EN1, OUTPUT);
+  pinMode(EN2, OUTPUT);
+  pinMode(EN3, OUTPUT);
+  pinMode(EN4, OUTPUT);
+  digitalWrite(EN1, LOW);
+  digitalWrite(EN2, LOW);
+  digitalWrite(EN3, LOW);
+  digitalWrite(EN4, LOW);
 }
 
 void loop()
 {
-  maquina_estado_run(ler_IR());
+  readUltrasonicDistanceD();
 
-  delay(10);
-}
+  cm = 0.01723 * leituraD;
 
-uint8_t estado = FRENTE;
+  Serial.print("Medicao Direita:  ");
+  Serial.print(cm);
+  Serial.println("cm");
+  delay(1000);
 
-void maquina_estado_run(uint8_t sensores)
-{
-  switch (estado)
+  readUltrasonicDistanceE();
+
+  cm1 = 0.01723 * leituraE;
+
+  Serial.print("Medicao Esquerda:  ");
+  Serial.print(cm1);
+  Serial.println("cm");
+  delay(1000);
+
+  if (cm1 > 20 && cm > 20) // sem nenhuma parede dos lados > Fim do lbirinto motores parados
   {
-  case PARA:
-    motores_para(); // desliga os dois motores
-    break;
-
-  case FRENTE:
-    motores_frente(); // anda pra frente por 2s
-    break;
-
-  case ROTACAO_DIREITA:
-    motores_direito(); // gira pra direita por 1s
-    motores_frente();  // anda pra frente por 2s
-    break;
-
-  case ROTACAO_ESQUERDA:
-    motores_esquerdo(); // gira pra esquerda por 1s
-    motores_frente();   // anda pra frente por 2s
-    break;
+    digitalWrite(EN1, 0);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 0);
+    digitalWrite(EN4, 0);
   }
-}
-
-uint8_t ler_IR()
-{
-  long duracaoEsquerda;
-  long distanciaEsquerda;
-
-  long duracaoDireita;
-  long distanciaDireita;
-
-  digitalWrite(trigEsquerda, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigEsquerda, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigEsquerda, LOW);
-  duracaoEsquerda = pulseIn(echoEsquerda, HIGH);
-  distanciaEsquerda = duracao / 58; // converte sensor para CM
-
-  digitalWrite(trigDireita, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigDireita, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigDireita, LOW);
-  duracaoDireita = pulseIn(echo, HIGH);
-  distanciaDireita = duracao / 58; // converte sensor para CM
-
-  if (distanciaEsquerda > 20 && distanciaDireita > 20) // sem nenhuma parede dos lados > Fim do lbirinto
-  { 
-    return NENHUM;
-  }
-  else if (distanciaEsquerda < 20 && distanciaDireita > 20) // parede na esquerda
+  else if (cm1 < 20 && cm > 20) // parede na esquerda
   {
-    return ROTACAO_DIREITA;
+    digitalWrite(EN1, 1);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 0);
+    digitalWrite(EN4, 1);
+    delay(1000);
+    digitalWrite(EN1, 0);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 0);
+    digitalWrite(EN4, 0);
+    delay(1000);
+    digitalWrite(EN1, 1);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 1);
+    digitalWrite(EN4, 0);
+    delay(1000);
+    digitalWrite(EN1, 0);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 0);
+    digitalWrite(EN4, 0);
+    delay(1000);
   }
-  else if (distanciaEsquerda > 20 && distanciaDireita < 20) // parede na direita
+  else if (cm1 > 20 && cm < 20) // parede na direita
   {
-    return ROTACAO_ESQUERDA;
+    digitalWrite(EN1, 0);
+    digitalWrite(EN2, 1);
+    digitalWrite(EN3, 1);
+    digitalWrite(EN4, 0);
+    delay(1000);
+    digitalWrite(EN1, 0);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 0);
+    digitalWrite(EN4, 0);
+    delay(1000);
+    digitalWrite(EN1, 1);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 1);
+    digitalWrite(EN4, 0);
+    delay(1000);
+    digitalWrite(EN1, 0);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 0);
+    digitalWrite(EN4, 0);
+    delay(1000);
   }
-  else if (distanciaEsquerda < 20 && distanciaDireita < 20) // parede dos dois lados
+  else if (cm1 < 20 && cm < 20) // parede dos dois lados motores para frente
   {
-    return AMBOS;
+    digitalWrite(EN1, 1);
+    digitalWrite(EN2, 0);
+    digitalWrite(EN3, 1);
+    digitalWrite(EN4, 0);
+    delay(2000);
   }
-
-  delay(500);
+  
 }
